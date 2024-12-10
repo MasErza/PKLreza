@@ -13,8 +13,11 @@ if(isset($_POST['login'])){
 
     if ($hitung > 0) {
         $data = mysqli_fetch_assoc($cekdatabase); // Ambil data pengguna
+
+        // simpan ke sesi
         $_SESSION['log'] = 'True';
         $_SESSION['role'] = $data['role']; // Simpan role pengguna
+        $_SESSION['user_id'] = $data['id']; // simpan id pengguna optional
         header('location:index.php');
     } else {
         echo '<script>alert("Email atau password salah");</script>';
