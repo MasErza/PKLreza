@@ -1,4 +1,16 @@
 <?php
+// Pastikan sesi hanya dimulai jika belum aktif
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Cek apakah pengguna sudah login
+if (!isset($_SESSION['log']) || $_SESSION['log'] !== 'True') {
+    echo "<script>alert('Silakan login terlebih dahulu.');</script>";
+    header("Location: login.php");
+    exit;
+}
+
 // Koneksi ke database
 $host = 'localhost';
 $username = 'root';
@@ -13,6 +25,15 @@ if ($conn->connect_error) {
 
 // Logika Hapus Transaksi
 if (isset($_GET['delete'])) {
+    // Periksa apakah pengguna adalah admin
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+        echo "<script>
+        alert('Akses ditolak! Hanya admin yang dapat menghapus transaksi.');
+        window.location.href = 'transaksi.php'; // Redirect dengan JavaScript
+        </script>";
+        exit;
+    }
+
     $id_transaksi = intval($_GET['delete']);
     $sqlDelete = "DELETE FROM transaksi WHERE id_transaksi = ?";
     $stmt = $conn->prepare($sqlDelete);
@@ -33,6 +54,14 @@ if (isset($_GET['delete'])) {
 
 // Logika Tambah Transaksi
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Periksa apakah pengguna adalah admin
+    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+        echo "<script>alert('Akses ditolak! Hanya admin yang dapat menambahkan transaksi.');
+        window.location.href = 'transaksi.php'; // Redirect dengan JavaScript
+        </script>";
+        exit;
+    }
+
     $tipe = $_POST['tipe'];
     $jumlah = $_POST['jumlah'];
     $keterangan = $_POST['keterangan'];
@@ -64,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $sqlTransaksi = "SELECT * FROM transaksi ORDER BY tanggal DESC";
 $resultTransaksi = $conn->query($sqlTransaksi);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,9 +121,6 @@ $resultTransaksi = $conn->query($sqlTransaksi);
                         <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
                         Transaksi
                     </a>
-                    <div class="sb-sidenav-menu-heading"></div>
-                    <div class="sb-sidenav-menu-heading"></div>
-                    <div class="sb-sidenav-menu-heading"></div>
                     <a href="logout.php" class="btn btn-danger btn-sm">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
@@ -137,7 +162,7 @@ $resultTransaksi = $conn->query($sqlTransaksi);
                             <button type="submit" class="btn btn-primary">Tambah Transaksi</button>
                         </form>
                         <table class="table table-bordered mt-4">
-                        <thead class="thead-dark">
+                            <thead class="thead-dark">
                                 <tr>
                                     <th>Tipe</th>
                                     <th>Jumlah</th>
